@@ -1,0 +1,20 @@
+window {
+        font-size 35px;
+        font-family: "JetBrainsMono Nerd Font";
+	color: white;
+        background-color: rgba(26, 27, 38, 0.8);
+}
+
+#entry:selected {
+	background-color: #ffffff;
+	
+}
+
+#text:selected {
+	color: #333333
+}
+
+#input {
+	background-color: rgba(26, 27, 38, 0.7);
+	color: white;
+}

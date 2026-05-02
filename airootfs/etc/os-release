@@ -1,0 +1,6 @@
+NAME="MarinOS Linux"
+PRETTY_NAME="MarinOS Linux"
+ID=marin
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+LOGO=star

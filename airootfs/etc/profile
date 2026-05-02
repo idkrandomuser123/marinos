@@ -1,0 +1,1 @@
+alias install='sudo bash /usr/local/bin/marinos-install'
