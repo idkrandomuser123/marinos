@@ -58,3 +58,5 @@ install
 After the installation you will be prompted to SDDM. After loging in you should see the beautiful desktop prepared by us!
 
 If you want to change your wallpaper, see [post installation](https://github.com/idkrandomuser123/marinos/wiki/Post-installation) 
+
+![logo](pics/logo-normal.png)
