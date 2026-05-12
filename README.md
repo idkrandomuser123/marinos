@@ -1,6 +1,6 @@
 # The MarinOS Linux Distributon
 
-![desktop-screenshot](desktop-screenshot)
+![desktop-screenshot](pics/desktop-screenshot.png)
 
 #### Simple. Beautiful. Lightweight.
 
@@ -47,7 +47,7 @@ Burn it onto an removable device (e.g. USB stick) using rufus/etcher or ventoy (
 
 Boot from the removable device in your motherboard's BIOS
 
-![live-enviroment-screenshot](fflive-screenshot.png)
+![live-enviroment-screenshot](pics/fflive-screenshot.png)
 
 Inside the live enviroment, run the guided installer with:
 ```
