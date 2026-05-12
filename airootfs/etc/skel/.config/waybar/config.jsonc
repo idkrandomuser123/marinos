@@ -7,19 +7,31 @@
     "spacing": 4, // Gaps between modules (4px)
     // Choose the order of the modules
     "modules-left": [
-	"hyprland/workspaces",
-//	"custom/control",
-	"custom/help",
-	"custom/keybinds",
+	    "custom/apps",
     ],
     "modules-center": [
-	"clock",
+	    "hyprland/workspaces",
     ],
     "modules-right": [
+
         "pulseaudio",
         "memory",
+        "clock",
+
     ],
 
+
+  "clock": {
+     "interval": 60,
+     "format": "{:%H:%M}",
+     "tooltip-format": "{:%Y-%m-%d}",
+     "max-length": 25
+  },
+
+  "custom/apps": {
+    "format": " Apps",
+    "on-click": "wofi --show drun"
+  },
 
 	"pulseaudio": {
 	    "format": "{volume}% {icon}",
@@ -46,16 +58,7 @@
 //sudo pacman -S yad		"on-click": /usr
 //		"format": "󰭩 - panel"	
 //	},
-	
-	"custom/help": {
-		"on-click": "bash ~/.config/waybar/help.sh",
-		"format": "| Help",
-	},
+  
 
-	"custom/keybinds": {
-    		"format": " Keybinds",
-    		"on-click": "bash ~/.config/waybar/keybinds.sh",
-    		"tooltip": false
-	},
-		
+
 }

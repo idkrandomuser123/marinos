@@ -1,7 +1,8 @@
 #!/bin/bash
 # MarinOS Installer
 set -e
-echo "v1.0"
+fastfetch
+echo "v1.1"
 echo "Thank you for using MarinOS!"
 echo "Connect to the network using iwctl. If you havent this installation will fail!"
 echo "Ethernet should work automatically!"
@@ -9,8 +10,8 @@ echo ""
 
 # Network check
 if ! ping -c 1 google.com &>/dev/null; then
-    echo "No network connection detected, please connect first"
-    exit 1
+      echo "No network connection detected, please connect first"
+      exit 1
 fi
 echo "Network OK!"
 echo ""
@@ -25,9 +26,9 @@ DISK="/dev/$DISK"
 # Partitioning
 echo ""
 echo "Launch cfdisk, Create:"
-echo "  1. EFI partition  (~512M, type: EFI System)"
-echo "  2. Swap partition (~2-8G, type: Linux swap) [optional]"
-echo "  3. Root partition (rest, type: Linux filesystem)"
+echo "  1. EFI partition  (~512M, type: EFI System)"
+echo "  2. Swap partition (~2-8G, type: Linux swap) [optional]"
+echo "  3. Root partition (rest, type: Linux filesystem)"
 echo ""
 read -p "Press enter to launch cfdisk..."
 cfdisk "$DISK"
@@ -48,9 +49,9 @@ echo "Formatting partitions..."
 mkfs.fat -F32 "$EFI_PART"
 mkfs.ext4 "$ROOT_PART"
 if [ -n "$SWAP_PART" ]; then
-    SWAP_PART="/dev/$SWAP_PART"
-    mkswap "$SWAP_PART"
-    swapon "$SWAP_PART"
+      SWAP_PART="/dev/$SWAP_PART"
+      mkswap "$SWAP_PART"
+      swapon "$SWAP_PART"
 fi
 
 # Mount
@@ -59,44 +60,50 @@ mount "$ROOT_PART" /mnt
 mkdir -p /mnt/boot/efi
 mount "$EFI_PART" /mnt/boot/efi
 
-# Install base system
-echo ""
-echo "Installing base system..."
-while true; do
-    if pacstrap /mnt base linux linux-firmware amd-ucode sudo yad nano networkmanager awww grub efibootmgr hyprland kitty wofi git base-devel sddm waybar ttf-jetbrains-mono-nerd firefox pipewire pipewire-pulse pipewire-alsa wireplumber; then
-        break
-    else
-        echo "pacstrap failed, check your connection"
-        read -p "Retry? (yes/no): " RETRY
-        if [ "$RETRY" != "yes" ]; then
-            echo "Exiting."
-            exit 1
-        fi
-    fi
-done
+# --- User Inputs ---
+read -p "Enter hostname (default: marinos): " HOSTNAME
+HOSTNAME=${HOSTNAME:-marinos}
 
-# fstab
-echo "Generating fstab..."
-genfstab -U /mnt >> /mnt/etc/fstab
-
-# User setup
-echo ""
-read -p "Enter hostname (default: marinos-btw): " HOSTNAME
-HOSTNAME=${HOSTNAME:-marinos-btw}
-read -p "Enter username: " USERNAME
-read -sp "Enter password for $USERNAME: " USERPASS
-echo ""
 read -sp "Enter root password: " ROOTPASS
+echo ""
+read -p "Enter full name for the user: " USERNAME
+read -sp "Enter password for $USERNAME: " USERPASS
 echo ""
 read -p "Enter timezone (e.g. Europe/Sarajevo): " TIMEZONE
 TIMEZONE=${TIMEZONE:-Europe/Sarajevo}
 
-# Chroot and configure
-echo ""
+# Install base system
+echo "Install base system"
+while true; do
+  if pacstrap /mnt base linux linux-firmware amd-ucode sudo yad nano \
+    networkmanager awww grub efibootmgr os-prober hyprland kitty wofi \
+    git base-devel sddm waybar ttf-jetbrains-mono-nerd firefox \
+    pipewire pipewire-pulse pipewire-alsa wireplumber; then
+    break
+  else
+    echo "pacstrap failed, check your connection"
+    read -p "Retry? (yes/no): " RETRY
+    if [ "$RETRY" != "yes" ]; then
+      echo "Exiting."
+      exit 1
+    fi
+  fi
+done
+
+# fstab
+echo "Generating fstab..."
+genfstab -U /mnt >>/mnt/etc/fstab
+
+# woah wallpapers
+mkdir -p /mnt/usr/share/backgrounds/mos-artwork
+cp -rv /usr/share/backgrounds/mos-artwork/. /mnt/usr/share/backgrounds/mos-artwork/
+# woah configs
+mkdir -p /mnt/etc/skel/.config
+cp -rv /etc/skel/.config/. /mnt/etc/skel/.config/
+
 echo "Configuring system..."
-INSTALL_USER=$USERNAME
-echo "$INSTALL_USER" > /tmp/marinos_user
-arch-chroot /mnt /bin/bash <<EOF
+
+arch-chroot /mnt /bin/bash <<MARIN_INSTALL
 # Timezone
 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc
@@ -109,34 +116,44 @@ echo "LANG=en_US.UTF-8" > /etc/locale.conf
 # Hostname
 echo "$HOSTNAME" > /etc/hostname
 cat > /etc/hosts <<HOSTS
-127.0.0.1   localhost
-::1         localhost
-127.0.1.1   $HOSTNAME.localdomain $HOSTNAME
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   $HOSTNAME.localdomain $HOSTNAME
 HOSTS
 
-# OS branding
+# Branding
 cat > /etc/os-release <<OS
 NAME="MarinOS"
 PRETTY_NAME="MarinOS"
 ID=marinos
 ID_LIKE=arch
+GRUB_DISABLE_OS_PROBER=false
+GRUB_BACKGROUND="/usr/share/backgrounds/mos-artwork/moon_grub_1920x1080.png"
 BUILD_ID=rolling
 ANSI_COLOR="38;2;23;147;209"
 OS
 
 # Users
-echo "Add users"
 echo "root:$ROOTPASS" | chpasswd
 useradd -m -G wheel -s /bin/bash $USERNAME
 echo "$USERNAME:$USERPASS" | chpasswd
 
 # Sudo
-echo "Configure sudo"
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
 # Bootloader
-echo "Install GRUB"
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=MarinOS
+
+cat <<EOF > /etc/default/grub
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="MarinOS (lil bro)"
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"
+GRUB_CMDLINE_LINUX=""
+GRUB_DISABLE_OS_PROBER=false
+GRUB_BACKGROUND="/usr/share/backgrounds/mos-artwork/moon_grub_1920x1080.png"
+# arch bloat tbh..... embrace marinos
+EOF
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Enable services
@@ -144,28 +161,25 @@ systemctl enable NetworkManager
 systemctl enable sddm
 
 # Pipewire
-echo "Configure pipewire"
 mkdir -p /home/$USERNAME/.config/systemd/user/default.target.wants
 ln -s /usr/lib/systemd/user/pipewire.service /home/$USERNAME/.config/systemd/user/default.target.wants/
 ln -s /usr/lib/systemd/user/pipewire-pulse.service /home/$USERNAME/.config/systemd/user/default.target.wants/
 ln -s /usr/lib/systemd/user/wireplumber.service /home/$USERNAME/.config/systemd/user/default.target.wants/
 
+# Configs & Permissions
+#cp -r /etc/skel/.config /home/$USERNAME/ || true
+chown -R $USERNAME:$USERNAME /home/$USERNAME/
+
 # mkinitcpio
 mkinitcpio -P
-EOF
-
-echo "If chown fails then simply reboot dont worry"
-# Copy configs
-INSTALL_USER=$(cat /tmp/marinos_user)
-echo "Copying configs for user: $INSTALL_USER"
-cp -r /etc/skel/.config /mnt/home/$INSTALL_USER/
-chown -R $INSTALL_USER:$INSTALL_USER /mnt/home/$INSTALL_USER/
+MARIN_INSTALL
 
 # Finished
-echo "If you see Arch Linux in GRUB then boot it, its most likely MarinOS"
+echo ""
 echo "MarinOS has successfully installed!"
+echo "-----------------------------------"
 read -p "Press enter to reboot..."
 umount -R /mnt
 reboot
-# thanks claude :) pookie
-# -teo
+
+#

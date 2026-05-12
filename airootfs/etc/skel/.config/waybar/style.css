@@ -16,6 +16,8 @@ window#waybar.hidden {
     opacity: 0.2;
 }
 
+
+
 /*
 window#waybar.empty {
     background-color: transparent;
@@ -69,6 +71,10 @@ button:hover {
 
 #workspaces button.urgent {
     background-color: #eb4d4b;
+}
+
+#custom-apps {
+  margin-left: 6px;
 }
 
 #mode {
