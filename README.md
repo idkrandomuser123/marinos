@@ -1,4 +1,3 @@
-![logo](pics/logo-normal.png)
 # The MarinOS Linux Distributon
 
 ![desktop-screenshot](pics/desktop-screenshot.png)
